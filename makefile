@@ -1,2 +1,2 @@
 all: 
-	cd include && mkdir build && cd build && g++ ../termios.cpp -o termios && ./termios
+	cd build && g++ -c ../include/termiosInput.cpp -o termiosInput.o
