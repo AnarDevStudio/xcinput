@@ -13,6 +13,7 @@ public:
 
     TermiosManager();      //start the system
     ~TermiosManager();
+    char isCharacterPushed(); //check if a character is pushed
     void StopInput();      //stop input reading
     void StartInput();     //start input reading
 };

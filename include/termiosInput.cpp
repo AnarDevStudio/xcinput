@@ -1,4 +1,6 @@
 #include "termiosInput.h"
+#include <cstdio>
+#include <unistd.h>
 
 // Constructor: terminali aktif hale getirir
 TermiosManager::TermiosManager() {
@@ -17,26 +19,42 @@ TermiosManager::~TermiosManager() {
 
 // Input okumayı durdurur
 void TermiosManager::StopInput() {
+    active = false;       // loop'u durdur
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     printf("Input stopped\n");
-    active = false;
 }
 
-// Input okumayı başlatır
+// Tek karakter oku
+char TermiosManager::isCharacterPushed() {
+    pushed_character = getchar();   
+    return pushed_character;  
+}
+
+// Sürekli input oku (loop)
 void TermiosManager::StartInput() {
     active = true;
+    printf("Input Started\n");
+
     while (active) {
         pushed_character = getchar();
 
         switch (pushed_character) {
-            case 27: printf("You pressed: Escape\n"); break;
-            case 32: printf("You pressed: Space\n"); break;
-            case 10:
-            case 13: printf("You pressed: Enter\n"); break;
-            case 8:
-            case 127: printf("You pressed: Backspace\n"); break;
-            default: printf("You pressed: %c (%d)\n", pushed_character, pushed_character); break;
+            case 27:  // Escape tuşu ile dur
+                printf("Escape pressed, stopping input.\n");
+                StopInput();
+                break;
+            case 32:
+                printf("Space pressed\n"); 
+                break;
+            case 10: case 13:
+                printf("Enter pressed\n"); 
+                break;
+            case 8: case 127:
+                printf("Backspace pressed\n"); 
+                break;
+            default:
+                printf("You pressed: %c (%d)\n", pushed_character, pushed_character);
+                break;
         }
     }
 }
-
