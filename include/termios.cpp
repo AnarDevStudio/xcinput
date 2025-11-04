@@ -8,6 +8,7 @@ class TermiosManager {
 public:
     termios oldt, newt;
     char pushed_character;
+    bool active = true;
 
     TermiosManager() {
         tcgetattr(STDIN_FILENO, &oldt);
@@ -17,17 +18,33 @@ public:
         printf("Terminal is active\n");
     };
 
+    ~TermiosManager() {
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+        printf("Terminal reset.\n");
+    }
+ 
+    void StopInput(){
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+        printf("Input stopped\n");
+        active = false;
+    };
+
     void StartInput(){
-        while (true)
+        active = true;
+        while (active)
         {
             pushed_character = getchar();
             printf("You pressed: %c\n", pushed_character);
+            
         }   
     }
+
+   
 };
 
 int main(){
     TermiosManager termiosManager;
     termiosManager.StartInput();
+    termiosManager.StopInput();
     return 0;
 }
