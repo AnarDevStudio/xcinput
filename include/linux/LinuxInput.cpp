@@ -1,7 +1,7 @@
-#include "termiosInput.h"
+#include "LinuxInput.h"
 #include <cstdio>
 #include <unistd.h>
-#include <SDL2/SDL.h>
+#include <ncurses.h>
 
 // constructor
 InputManager::InputManager() {
@@ -16,6 +16,50 @@ InputManager::InputManager() {
 InputManager::~InputManager() {
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     printf("Terminal reset.\n");
+}
+
+void InputManager::StartMouseInput() {
+    initscr();              // Start curses mode
+    cbreak();               // Line buffering disabled
+    noecho();               // Don't echo() while we do getch
+    keypad(stdscr, TRUE);   // We get F1, F2 etc..
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+    printf("Mouse input started\n");
+    refresh();
+}
+// get mouse position
+void InputManager::GetMousePosition() {
+    printf("\033[?1003h\n"); fflush(stdout); // hareket raporlamayı aç
+
+    MEVENT event;
+    int ch;
+
+    while (true) {
+        ch = getch(); // non-block mod olmasa bile sürekli olay bekler
+
+        if (ch == KEY_MOUSE) {
+            if (getmouse(&event) == OK) {
+                mouse_x = event.x;
+                mouse_y = event.y;
+
+                // Terminalde her seferinde aynı satırı güncelle
+                mvprintw(0, 0, "Mouse Position: (%d, %d)      ", mouse_x, mouse_y);
+                refresh();
+            }
+        }
+
+        usleep(10000); // 10 ms bekle
+    }
+
+    // Program sonlanınca terminali eski haline döndür
+    printf("\033[?1003l\n");
+    endwin();
+}
+
+// check mouse buttons
+void InputManager::IsMouseButtonPressed(bool &left, bool &right) {
+    left  = mouse_left;
+    right = mouse_right;
 }
 
 // stop input reading
