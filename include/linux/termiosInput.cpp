@@ -1,6 +1,7 @@
 #include "termiosInput.h"
 #include <cstdio>
 #include <unistd.h>
+#include <SDL2/SDL.h>
 
 // constructor
 InputManager::InputManager() {

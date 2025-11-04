@@ -1,2 +1,2 @@
-all: 
-	cd build && g++ -c ../include/termiosInput.cpp -o termiosInput.o
+all:
+	g++ include/linux/termiosInput.cpp main.cpp -o main
