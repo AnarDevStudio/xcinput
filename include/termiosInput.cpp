@@ -2,8 +2,8 @@
 #include <cstdio>
 #include <unistd.h>
 
-// Constructor: terminali aktif hale getirir
-TermiosManager::TermiosManager() {
+// constructor
+InputManager::InputManager() {
     tcgetattr(STDIN_FILENO, &oldt);
     newt = oldt;
     newt.c_lflag &= ~(ICANON | ECHO);
@@ -11,27 +11,27 @@ TermiosManager::TermiosManager() {
     printf("Terminal is active\n");
 }
 
-// Destructor: terminal ayarlarını geri alır
-TermiosManager::~TermiosManager() {
+// rest destructor
+InputManager::~InputManager() {
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     printf("Terminal reset.\n");
 }
 
-// Input okumayı durdurur
-void TermiosManager::StopInput() {
+// stop input reading
+void InputManager::StopInput() {
     active = false;       // loop'u durdur
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     printf("Input stopped\n");
 }
 
-// Tek karakter oku
-char TermiosManager::isCharacterPushed() {
+// just check if a character is pushed
+char InputManager::isCharacterPushed() {
     pushed_character = getchar();   
     return pushed_character;  
 }
 
-// Sürekli input oku (loop)
-void TermiosManager::StartInput() {
+// reed input continuously
+void InputManager::StartInput() {
     active = true;
     printf("Input Started\n");
 

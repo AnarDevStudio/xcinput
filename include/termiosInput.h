@@ -5,14 +5,14 @@
 #include <unistd.h>   
 #include <cstdio>     // printf 
 
-class TermiosManager {
+class InputManager {
 public:
     termios oldt, newt;
     char pushed_character; //pushed character
     bool active = true;    //is input active
 
-    TermiosManager();      //start the system
-    ~TermiosManager();
+    InputManager();      //start the system
+    ~InputManager();
     char isCharacterPushed(); //check if a character is pushed
     void StopInput();      //stop input reading
     void StartInput();     //start input reading
