@@ -4,7 +4,7 @@
 using namespace std;
 
 int main(){
-   InputManager inputManager;
+   InputManager inputManager; //call 
 
     while (true) {
         char a = inputManager.isCharacterPushed();
@@ -14,14 +14,9 @@ int main(){
             break;
         } 
         else {
-            printf("%c", a);  // karakter olarak yaz
+            printf("%c", a);  
         }
     }
-    
-    
-
-    
-    
     
     return 0;
 }
