@@ -4,9 +4,24 @@
 using namespace std;
 
 int main(){
-    InputManager inputManager;
-    inputManager.StartMouseInput();
-    inputManager.GetMousePosition();
+   InputManager inputManager;
+
+    while (true) {
+        char a = inputManager.isCharacterPushed();
+
+        if (a == 'w') {
+            printf("Hello World\n");
+            break;
+        } 
+        else {
+            printf("%c", a);  // karakter olarak yaz
+        }
+    }
+    
+    
+
+    
+    
     
     return 0;
 }

@@ -1,9 +1,9 @@
 #include "LinuxInput.h"
 #include <cstdio>
 #include <unistd.h>
+#include <termios.h>
 #include <ncurses.h>
 
-// constructor
 InputManager::InputManager() {
     tcgetattr(STDIN_FILENO, &oldt);
     newt = oldt;
@@ -12,94 +12,89 @@ InputManager::InputManager() {
     printf("Terminal is active\n");
 }
 
-// rest destructor
 InputManager::~InputManager() {
+    printf("\033[?1003l\n"); fflush(stdout); // disable mouse tracking
+    endwin(); // close ncurses safely
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     printf("Terminal reset.\n");
 }
 
 void InputManager::StartMouseInput() {
-    initscr();              // Start curses mode
-    cbreak();               // Line buffering disabled
-    noecho();               // Don't echo() while we do getch
-    keypad(stdscr, TRUE);   // We get F1, F2 etc..
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
-    printf("Mouse input started\n");
-    refresh();
+    printf("\033[?1003h\n"); fflush(stdout); // enable mouse movement reports
+    printf("Mouse input started.\n");
 }
-// get mouse position
-void InputManager::GetMousePosition() {
-    printf("\033[?1003h\n"); fflush(stdout); // hareket raporlamayı aç
 
-    MEVENT event;
-    int ch;
+void InputManager::GetMousePosition(bool isDebug) {
+    ch = getch();
+    if (ch == KEY_MOUSE) {
+        if (getmouse(&event) == OK) {
+            mouse_x = event.x;
+            mouse_y = event.y;
 
-    while (true) {
-        ch = getch(); // non-block mod olmasa bile sürekli olay bekler
+            // Update button states
+            mouse_left  = event.bstate & BUTTON1_PRESSED;
+            mouse_right = event.bstate & BUTTON3_PRESSED;
 
-        if (ch == KEY_MOUSE) {
-            if (getmouse(&event) == OK) {
-                mouse_x = event.x;
-                mouse_y = event.y;
-
-                // Terminalde her seferinde aynı satırı güncelle
-                mvprintw(0, 0, "Mouse Position: (%d, %d)      ", mouse_x, mouse_y);
+            if (isDebug) {
+                mvprintw(0, 0, "Mouse: (%d, %d) L:%d R:%d     ",
+                         mouse_x, mouse_y, mouse_left, mouse_right);
                 refresh();
             }
         }
-
-        usleep(10000); // 10 ms bekle
     }
-
-    // Program sonlanınca terminali eski haline döndür
-    printf("\033[?1003l\n");
-    endwin();
+    usleep(10000);
 }
 
-// check mouse buttons
-void InputManager::IsMouseButtonPressed(bool &left, bool &right) {
-    left  = mouse_left;
-    right = mouse_right;
-}
-
-// stop input reading
 void InputManager::StopInput() {
-    active = false;       // loop'u durdur
+    printf("\033[?1003l\n"); fflush(stdout);
+    endwin();
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     printf("Input stopped\n");
 }
 
-// just check if a character is pushed
-char InputManager::isCharacterPushed() {
-    pushed_character = getchar();   
-    return pushed_character;  
-}
-
-// reed input continuously
 void InputManager::StartInput() {
     active = true;
     printf("Input Started\n");
 
     while (active) {
-        pushed_character = getchar();
-
-        switch (pushed_character) {
-            case 27:  // Escape tuşu ile dur
+        int ch = getchar();
+        switch (ch) {
+            case 27: // ESC
                 printf("Escape pressed, stopping input.\n");
                 StopInput();
+                active = false;
                 break;
             case 32:
-                printf("Space pressed\n"); 
+                printf("Space pressed\n");
                 break;
-            case 10: case 13:
-                printf("Enter pressed\n"); 
+            case 10:
+            case 13:
+                printf("Enter pressed\n");
                 break;
-            case 8: case 127:
-                printf("Backspace pressed\n"); 
+            case 8:
+            case 127:
+                printf("Backspace pressed\n");
                 break;
             default:
-                printf("You pressed: %c (%d)\n", pushed_character, pushed_character);
+                if (ch != EOF)
+                    printf("You pressed: %c (%d)\n", ch, ch);
                 break;
         }
     }
+}
+
+char InputManager::isCharacterPushed() {
+    pushed_character = getchar();
+    return pushed_character;
+}
+
+void InputManager::IsMouseButtonPressed(bool &left, bool &right) {
+    left  = mouse_left;
+    right = mouse_right;
 }
